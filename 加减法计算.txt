@@ -1,0 +1,149 @@
+#include <iostream>
+#include <time.h>
+#include <cstdlib>
+#include <fstream>
+#include<iomanip>
+#include<map>
+#include <chrono>
+
+struct list_
+{	//用来存储计算错误的题目
+	int num1;
+	int num2;
+	int num_sympol;
+	double true_ans;
+	list_* next;
+};
+
+int main()
+{
+	int num;			//循环的次数
+	int max;			//计算的最大值
+	char flag;			//
+	int an;				//
+	double res;			//
+	int false_num = 0;	//计算错误的题目数
+	//time_t start_t, end_t;
+	int sum_t = 0;
+	int min_t = 0;
+
+	std::map<int, char> sympol =
+	{	//存储计算符号的字典
+		{0, '+'},
+		{1, '-'},
+		{2, '*'},
+		{3, '/'},
+	};
+	int temp;			//上面字典的键值
+	list_* head = new list_;		//写数据用的链表头
+	list_* head_read = head;	//读数据用的链表头
+
+	std::cout << "下面进行计算练习\n请输入题目的数量(5-15)\n";
+	std::cin >> num ;
+	while (num < 5 || num > 15)
+	{	//输入参数有误
+		std::cout << "请重新输入题目的数量(5-15)\n";
+		std::cin >> num;
+	}
+
+	std::cout << "请输入最大的计算范围(50-100)\n";
+	std::cin >> max;
+	while (max < 50 || max > 100)
+	{	//输入参数有误
+		std::cout << "请重新输入最大的计算范围(50-100)\n";
+		std::cin >> max;
+	}
+	
+	std::cout << "是否涉及乘除法？请输入'Y'或'N'\n";
+	std::cin >> flag;
+	while (flag != 'Y' && flag != 'N')
+	{	//输入参数有误
+		std::cout << "是否涉及乘除法？请重新输入'Y'或'N'\n";
+		std::cin >> flag;
+	}
+
+	if (flag == 'Y')
+	{
+		std::cout << "除法四舍五入保留小数点后2位即可\n";
+	}
+
+	srand(time(NULL));//初始化随机数种子
+
+	for (int i = 0; i < num; i++)
+	{	//出题
+		double a = rand() % (max + 1);
+		double b = rand() % (max + 1);
+		if (flag == 'N')
+		{
+			temp = rand() % 2;
+		}
+		else
+		{
+			temp = rand() % 4;
+		}
+
+		std::cout << std::setw(3) << a;	//设置输出长度为3，默认右对齐
+		std::cout << ' ' << sympol[temp] << ' ';
+		std::cout << std::left << std::setw(3) << b;
+		std::cout << " =" << std::right << std::endl;
+		auto start_t = std::chrono::steady_clock::now();
+		std::cin >> an;
+		auto end_t = std::chrono::steady_clock::now();
+		auto bet_t = std::chrono::duration<double, std::milli>(end_t - start_t).count();
+
+		if (temp == 0) 
+		{
+			res = a + b;
+		}
+		else if (temp == 1)
+		{
+			res = a - b;
+		}
+		else if (temp == 2)
+		{
+			res = a * b;
+		}
+		else
+		{
+			res = a / b;
+			res = round(res * 100) / 100.0;	//保留小数点后2位
+		}
+
+		if (an != res)
+		{	//答错题目时
+			false_num ++;
+
+			list_* error_ = new list_;
+			error_->num1 = a;
+			error_->num2 = b;
+			error_->num_sympol = temp;
+			error_->true_ans = res;
+			error_->next = nullptr;
+
+			head->next = error_;
+			head = error_;
+		}
+		else
+		{	//答对题目时
+			if (min_t == 0 || min_t > bet_t)
+			{	//计算最短时间
+				min_t = bet_t;
+			}
+		}
+		sum_t += bet_t;
+	}
+	std::cout << "\n答对" << num - false_num << "题；答错" << false_num << "题。\n";
+	std::cout << "答对最短用时" << min_t << "ms; 所有题目平均用时" << sum_t/num << "ms\n";
+	std::cout << "错误题目的答案如下：\n";
+	
+	while (head_read->next)
+	{	//将答错的题目重新打出来
+		head_read = head_read->next;
+		std::cout << std::setw(3) << head_read->num1;
+		std::cout << ' ' << sympol[head_read->num_sympol] << ' ';
+		std::cout << std::left << std::setw(3) << head_read->num2;
+		std::cout  << " = " << std::right << head_read->true_ans << "\n\n";
+	}
+
+	system("pause");
+} 
